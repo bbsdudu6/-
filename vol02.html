@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deer歌单 | 叙事全量实验室版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@900&family=Noto+Serif+SC:wght@700&display=swap');
+        
+        :root {
+            --bg-color: #f4f4f4;
+        }
+
+        body { 
+            font-family: 'Noto Serif SC', serif; 
+            background: var(--bg-color); 
+            color: #000;
+            margin: 0;
+            overflow: hidden; 
+            transition: background 0.8s ease;
+            user-select: none;
+        }
+
+        .viewport {
+            display: flex;
+            width: 300vw;
+            height: 100vh;
+            transition: transform 0.8s cubic-bezier(0.8, 0, 0.2, 1);
+        }
+
+        .page {
+            width: 100vw;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 100px 24px 140px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        /* 几何装饰装饰块 */
+        .page::before {
+            content: "";
+            position: absolute;
+            top: 0; right: 0;
+            width: 180px; height: 180px;
+            background: var(--decor-color, #ffde03);
+            z-index: -1;
+            clip-path: polygon(100% 0, 0 0, 100% 100%);
+            opacity: 0.7;
+        }
+
+        .playlist-card {
+            width: 100%;
+            max-width: 460px;
+            background: #fff;
+            border: 2.5px solid #000;
+            box-shadow: 14px 14px 0px #000;
+            padding: 45px 35px;
+            border-radius: 2px;
+            margin-bottom: 2rem;
+        }
+
+        .vol-header {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 5rem;
+            line-height: 0.8;
+            margin-bottom: 1.5rem;
+            letter-spacing: -4px;
+            -webkit-text-stroke: 2px #000;
+            color: transparent;
+            opacity: 0.9;
+        }
+
+        .song-item {
+            margin-bottom: 2.8rem;
+            position: relative;
+        }
+
+        .song-id {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.75rem;
+            background: #000;
+            color: #fff;
+            padding: 2px 8px;
+            margin-right: 10px;
+            font-weight: 900;
+        }
+
+        .song-title {
+            font-size: 0.85rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -0.5px;
+        }
+
+        .lyric-box {
+            margin-top: 10px;
+            padding-left: 15px;
+            border-left: 4px solid var(--decor-color, #000);
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            line-height: 1.5;
+        }
+
+        .nav-dot {
+            width: 10px; height: 10px; border: 2px solid #000;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .nav-dot.active { background: #000; width: 45px; }
+
+        .page::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body>
+
+    <!-- 极简固定导航 -->
+    <div class="fixed top-8 left-8 z-50 flex flex-col gap-3">
+        <button onclick="switchPage(0)" id="nav-0" class="text-[10px] font-black tracking-tighter hover:line-through transition-all opacity-100">VOL.01</button>
+        <button onclick="switchPage(1)" id="nav-1" class="text-[10px] font-black tracking-tighter hover:line-through transition-all opacity-30">VOL.02</button>
+        <button onclick="switchPage(2)" id="nav-2" class="text-[10px] font-black tracking-tighter hover:line-through transition-all opacity-30">VOL.03</button>
+    </div>
+
+    <div class="viewport" id="viewport">
+        <!-- VOL.01 - 全量 10 首 -->
+        <section class="page" style="--decor-color: #0051ff;">
+            <div class="playlist-card">
+                <div class="vol-header">01</div>
+                <p class="text-[10px] font-black tracking-[0.5em] mb-12 uppercase text-blue-700">Deep Sea / 情绪潜泳</p>
+                <div id="list-01"></div>
+                <button onclick="showQR()" class="mt-12 w-full border-2 border-black py-3 font-black text-[10px] uppercase tracking-widest hover:bg-black hover:text-white transition-colors">
+                    Archive Access Key
+                </button>
+            </div>
+        </section>
+
+        <!-- VOL.02 -->
+        <section class="page" style="--decor-color: #ff3e3e;">
+            <div class="playlist-card">
+                <div class="vol-header">02</div>
+                <p class="text-[10px] font-black tracking-[0.5em] mb-12 uppercase text-red-600">Neon Sun / 白日花火</p>
+                <div id="list-02"></div>
+            </div>
+        </section>
+
+        <!-- VOL.03 -->
+        <section class="page" style="--decor-color: #ffde03;">
+            <div class="playlist-card">
+                <div class="vol-header">03</div>
+                <p class="text-[10px] font-black tracking-[0.5em] mb-12 uppercase text-yellow-600">Dream Logic / 逻辑碎片</p>
+                <div id="list-03"></div>
+            </div>
+        </section>
+    </div>
+
+    <!-- 底部状态指示器 -->
+    <div class="fixed bottom-10 right-10 flex gap-3 z-50">
+        <div class="nav-dot active" id="dot-0"></div>
+        <div class="nav-dot" id="dot-1"></div>
+        <div class="nav-dot" id="dot-2"></div>
+    </div>
+
+    <div id="qrcode-panel" class="fixed inset-0 bg-white z-[100] hidden flex-col items-center justify-center p-10" onclick="this.style.display='none'">
+        <div id="qrcode" class="p-4 border-[6px] border-black"></div>
+        <p class="mt-8 font-black text-xs tracking-[0.3em] uppercase">Private Archive No. 001</p>
+        <p class="mt-2 text-[10px] opacity-40">Deer Collection 2026</p>
+    </div>
+
+    <script>
+        let currentPage = 0;
+
+        // 全量数据恢复
+        const data01 = [
+            { id: '01', artist: '周兴哲', song: '挚友', lyric: '“我最不应该 还害你受困 进退不得”' },
+            { id: '02', artist: '韦礼安', song: '双栖动物', lyric: '“我不像你是双栖动物，我只能活在充满爱的幸福”' },
+            { id: '03', artist: '林俊杰', song: '江南', lyric: '“相信爱一天，抵过永远”' },
+            { id: '04', artist: '周杰伦', song: '彩虹', lyric: '“你要离开 我知道很简单，你说依赖 是我们的阻碍”' },
+            { id: '05', artist: '卢广仲', song: '鱼仔', lyric: '“这几年我的打拼跟认真，都是因为你”' },
+            { id: '06', artist: '陈奕迅', song: '披风', lyric: '“多平凡的人也一样，很需要梦”' },
+            { id: '07', artist: '李荣浩', song: '老街', lyric: '“忘不掉的是什么我也不知道 放不下熟悉片段”' },
+            { id: '08', artist: '王力宏', song: 'Kiss Goodbye', lyric: '“爱情的滋味此刻我终于最明白”' },
+            { id: '09', artist: '胡歌', song: '忘记时间', lyric: '“渐渐地忘记赶不上明天，只要用力地抓紧了想念”' },
+            { id: '10', artist: '沈以诚', song: '预言家', lyric: '“我预见黑夜后的光亮，黎明即起，冲破监牢”' }
+        ];
+
+        const data02 = [
+            { id: '01', artist: '落日飞车', song: 'My Jinji', lyric: '“Time time will tell how much I love you”' },
+            { id: '02', artist: '橘子海', song: '夏日漱石', lyric: '“Love is a losing game”' },
+            { id: '03', artist: '五月天', song: '盛夏光年', lyric: '“放弃规则，放纵去爱”' }
+        ];
+
+        const data03 = [
+            { id: '01', artist: '郭顶', song: '保留', lyric: '“我想起你的时候，有些东西正在消失”' },
+            { id: '02', artist: '莫文蔚', song: '阴天', lyric: '“回想那一天，喧闹的喜宴”' },
+            { id: '03', artist: '草东没有派对', song: '大风吹', lyric: '“哭啊 喊啊 7岁的那一年 抓住那只蝉”' }
+        ];
+
+        function renderList(id, data) {
+            document.getElementById(id).innerHTML = data.map(item => `
+                <div class="song-item">
+                    <div class="flex items-center">
+                        <span class="song-id">${item.id}</span>
+                        <span class="song-title">${item.artist} — ${item.song}</span>
+                    </div>
+                    <div class="lyric-box">${item.lyric}</div>
+                </div>
+            `).join('');
+        }
+
+        const themes = ['#f4f4f4', '#fffdfa', '#fafafa'];
+
+        function switchPage(idx) {
+            const viewport = document.getElementById('viewport');
+            if(!viewport) return;
+            
+            viewport.style.transform = `translateX(-${idx * 100}vw)`;
+            document.body.style.background = themes[idx];
+            
+            // 更新导航和点
+            document.querySelectorAll('.nav-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+            [0,1,2].forEach(i => {
+                const nav = document.getElementById(`nav-${i}`);
+                if(nav) nav.style.opacity = (i === idx) ? '1' : '0.3';
+            });
+            
+            currentPage = idx;
+        }
+
+        // 初始化
+        renderList('list-01', data01);
+        renderList('list-02', data02);
+        renderList('list-03', data03);
+
+        window.onload = () => switchPage(0);
+
+        // 滑动手势
+        let startX = 0;
+        document.addEventListener('touchstart', e => startX = e.touches[0].clientX);
+        document.addEventListener('touchend', e => {
+            const endX = e.changedTouches[0].clientX;
+            const diff = startX - endX;
+            if (Math.abs(diff) > 80) {
+                if (diff > 0 && currentPage < 2) switchPage(currentPage + 1);
+                else if (diff < 0 && currentPage > 0) switchPage(currentPage - 1);
+            }
+        });
+
+        function showQR() {
+            const panel = document.getElementById('qrcode-panel');
+            panel.style.display = 'flex';
+            const qrContainer = document.getElementById("qrcode");
+            qrContainer.innerHTML = '';
+            new QRCode(qrContainer, {
+                text: window.location.href,
+                width: 220, height: 220,
+                colorDark : "#000000", colorLight : "#ffffff"
+            });
+        }
+    </script>
+</body>
+</html>
