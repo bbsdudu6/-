@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Deer歌单 | 极致策展版</title>
+    <title>Deer歌单 | 全流光统一版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;700&display=swap');
         
         :root {
             --bg-deep: #020617;
@@ -21,7 +21,7 @@
             overflow-x: hidden;
         }
 
-        /* 增加动态背景：模拟深海呼吸感 */
+        /* 动态呼吸背景 */
         .bg-glow {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -36,29 +36,33 @@
         }
 
         .playlist-card {
-            background: rgba(15, 23, 42, 0.8);
+            background: rgba(15, 23, 42, 0.85);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
 
-        /* 歌词高亮悬停：增加“触电感” */
+        /* 歌词交互 */
         .song-item {
             transition: all 0.4s ease;
             cursor: pointer;
             position: relative;
+            border-left: 2px solid transparent; 
+            padding-left: 0;
         }
         .song-item:hover {
             transform: translateX(10px);
-            filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.4));
+            border-left: 2px solid rgba(56, 189, 248, 0.5);
+            padding-left: 1rem;
         }
 
+        /* 全局流光特效：应用到所有歌词 */
         .highlight-text {
-            background: linear-gradient(90deg, #38bdf8, #818cf8, #38bdf8);
+            background: linear-gradient(90deg, #7dd3fc, #c084fc, #7dd3fc); /* 稍微调亮一点，确保在深底上清晰 */
             background-size: 200% auto;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            animation: shine 4s linear infinite;
+            animation: shine 6s linear infinite; /* 放慢一点速度，让阅读更舒服 */
         }
 
         @keyframes shine {
@@ -73,6 +77,14 @@
             display: none;
             z-index: 100;
         }
+        
+        /* 打印适配 */
+        @media print {
+            body { background: white; color: black; }
+            .playlist-card { box-shadow: none; border: none; background: white; backdrop-filter: none; }
+            .bg-glow, button { display: none; }
+            .highlight-text { -webkit-text-fill-color: black; background: none; }
+        }
     </style>
 </head>
 <body class="flex flex-col items-center py-20 px-4">
@@ -81,66 +93,64 @@
 
     <!-- 顶栏操作 -->
     <div class="fixed top-8 flex gap-4 z-50">
-        <button onclick="window.print()" class="px-6 py-2 bg-white/5 hover:bg-white/20 border border-white/10 rounded-full text-[11px] tracking-[0.2em] transition-all">
+        <button onclick="window.print()" class="px-6 py-2 bg-white/5 hover:bg-white/20 border border-white/10 rounded-full text-[11px] tracking-[0.2em] transition-all text-white">
             PRINT ARCHIVE
         </button>
-        <button onclick="showQR()" class="px-6 py-2 bg-sky-500/80 hover:bg-sky-400 border border-sky-300/30 rounded-full text-[11px] tracking-[0.2em] transition-all shadow-xl shadow-sky-500/20">
+        <button onclick="showQR()" class="px-6 py-2 bg-sky-500/80 hover:bg-sky-400 border border-sky-300/30 rounded-full text-[11px] tracking-[0.2em] transition-all shadow-xl shadow-sky-500/20 text-white">
             CONNECT LINK
         </button>
     </div>
 
     <!-- 策展卡片 -->
     <article class="playlist-card w-full max-auto max-w-[480px] rounded-[3rem] overflow-hidden shadow-2xl">
-        <header class="pt-20 pb-12 text-center relative">
-            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-sky-500/30 rounded-full"></div>
-            <h1 class="text-5xl font-black tracking-[0.3em] mb-4">DEER</h1>
-            <p class="text-[10px] text-sky-400/60 tracking-[0.5em] uppercase font-bold">Curated Soundscape / Vol.01</p>
+        <header class="pt-20 pb-12 text-center relative border-b border-white/5 mx-8">
+            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-20 h-1 bg-sky-500/30 rounded-b-full"></div>
+            <h1 class="text-4xl font-black tracking-[0.2em] mb-4 text-white">DEER歌单</h1>
+            <p class="text-[10px] text-sky-400/60 tracking-[0.4em] uppercase font-bold">Vol.01: Unspoken Words</p>
         </header>
 
-        <main class="px-10 pb-16 space-y-10">
-            <div id="song-list" class="space-y-8"></div>
-
-            <!-- 终章设计：增加视觉重量 -->
-            <section class="mt-12 p-8 bg-sky-500/5 rounded-3xl border border-sky-500/20 group hover:bg-sky-500/10 transition-colors">
-                <div class="flex justify-between items-center mb-4">
-                    <span class="text-xs font-bold text-sky-300">10. 沈以诚《预言家》</span>
-                    <span class="text-[9px] px-2 py-1 bg-sky-500 text-black font-black rounded">FIN</span>
-                </div>
-                <p class="text-lg highlight-text font-bold italic">“我预见黑夜后的光亮，黎明即起，冲破监牢”</p>
-            </section>
+        <main class="px-8 py-12">
+            <div id="song-list" class="space-y-9"></div>
         </main>
 
-        <footer class="p-10 bg-black/40 text-[9px] text-slate-500 flex justify-between tracking-widest uppercase">
-            <span>By Gemini x Deer</span>
-            <span>Encoded in 2026</span>
+        <footer class="px-10 py-12 bg-black/40 text-[9px] text-slate-600 flex justify-between tracking-widest uppercase font-medium">
+            <span>Curated by Gemini</span>
+            <span>2026 Archived</span>
         </footer>
     </article>
 
     <!-- 二维码面板 -->
     <div id="qrcode-panel" class="flex items-center justify-center" onclick="this.style.display='none'">
-        <div class="bg-white p-10 rounded-[3rem] text-center" onclick="event.stopPropagation()">
-            <div id="qrcode" class="mb-6"></div>
-            <h3 class="text-black font-black text-sm tracking-widest uppercase">Scan to Sync</h3>
-            <p class="text-slate-400 text-[10px] mt-2">您的音乐审美已同步至云端</p>
+        <div class="bg-white p-10 rounded-[2.5rem] text-center transform transition-all hover:scale-105" onclick="event.stopPropagation()">
+            <div id="qrcode" class="mb-6 flex justify-center"></div>
+            <h3 class="text-black font-black text-xs tracking-[0.2em] uppercase">Scan to Sync</h3>
+            <p class="text-slate-400 text-[10px] mt-2">DEER PLAYLIST VOL.01</p>
         </div>
     </div>
 
     <script>
+        // 完整的 1-10 首数据，统一管理
         const songData = [
             { id: '01', artist: '周兴哲《挚友》', tag: 'Ache', lyric: '“我最不应该 还害你受困 进退不得”' },
             { id: '02', artist: '韦礼安《双栖动物》', tag: 'Hybrid', lyric: '“我不像你是双栖动物，我只能活在充满爱的幸福”' },
             { id: '03', artist: '林俊杰《江南》', tag: 'Epoch', lyric: '“相信爱一天，抵过永远”' },
             { id: '04', artist: '周杰伦《彩虹》', tag: 'Prism', lyric: '“你要离开 我知道很简单，你说依赖 是我们的阻碍”' },
-            { id: '05', artist: '卢广仲《鱼仔》', tag: 'Deep', lyric: '“这几年我的打拼跟认真，都是因为你”' }
+            { id: '05', artist: '卢广仲《鱼仔》', tag: 'Deep', lyric: '“这几年我的打拼跟认真，都是因为你”' },
+            { id: '06', artist: '陈奕迅《披风》', tag: 'Dream', lyric: '“多平凡的人也一样，很需要梦”' },
+            { id: '07', artist: '李荣浩《老街》', tag: 'Retro', lyric: '“忘不掉的是什么我也不知道 放不下熟悉片段”' },
+            { id: '08', artist: '王力宏《Kiss Goodbye》', tag: 'Truth', lyric: '“爱情的滋味此刻我终于最明白”' },
+            { id: '09', artist: '胡歌《忘记时间》', tag: 'Void', lyric: '“渐渐地忘记赶不上明天，只要用力地抓紧了想念”' },
+            { id: '10', artist: '沈以诚《预言家》', tag: 'Resolution', lyric: '“我预见黑夜后的光亮，黎明即起，冲破监牢”' }
         ];
 
         document.getElementById('song-list').innerHTML = songData.map(song => `
             <div class="song-item group">
-                <div class="flex justify-between items-baseline mb-2">
-                    <h2 class="text-sm font-bold opacity-70 group-hover:opacity-100">${song.id}. ${song.artist}</h2>
-                    <span class="text-[8px] text-sky-500 font-black tracking-tighter opacity-40 group-hover:opacity-100">${song.tag}</span>
+                <div class="flex justify-between items-baseline mb-1.5">
+                    <h2 class="text-[13px] font-bold text-slate-300 group-hover:text-white transition-colors">${song.id}. ${song.artist}</h2>
+                    <span class="text-[8px] text-sky-500/60 font-black tracking-widest uppercase group-hover:text-sky-400 transition-colors">${song.tag}</span>
                 </div>
-                <p class="text-sm highlight-text font-medium leading-relaxed">${song.lyric}</p>
+                <!-- 这里的 highlight-text 现在的应用到所有的歌词上了 -->
+                <p class="text-[13px] highlight-text font-medium leading-relaxed">${song.lyric}</p>
             </div>
         `).join('');
 
@@ -150,7 +160,7 @@
             qrContainer.innerHTML = '';
             new QRCode(qrContainer, {
                 text: window.location.href,
-                width: 200, height: 200,
+                width: 180, height: 180,
                 colorDark : "#000000", colorLight : "#ffffff",
                 correctLevel : QRCode.CorrectLevel.H
             });
