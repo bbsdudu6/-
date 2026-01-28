@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deer歌单 | Vol.01</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap');
+        
+        :root {
+            --bg-deep: #020617;
+            --card-bg: #0f172a;
+            --accent: #38bdf8;
+        }
+
+        body { 
+            font-family: 'Noto Serif SC', serif; 
+            background: var(--bg-deep); 
+            color: #f1f5f9; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .playlist-card {
+            width: 100%;
+            max-width: 450px;
+            background: var(--card-bg);
+            border-radius: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 50px 100px -20px rgba(0, 0, 0, 0.7);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .highlight-text {
+            background: linear-gradient(90deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .song-item {
+            border-left: 2px solid rgba(56, 189, 248, 0.2);
+            padding-left: 1.25rem;
+            margin-bottom: 1.75rem;
+        }
+
+        .final-item {
+            border-left: 4px solid var(--accent);
+            background: linear-gradient(to right, rgba(56, 189, 248, 0.1), transparent);
+            border-radius: 0 1rem 1rem 0;
+            padding: 1.5rem;
+            margin-top: 2.5rem;
+        }
+
+        .no-print { transition: all 0.3s ease; }
+
+        #qrcode-panel {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(12px);
+            display: none;
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white; padding: 0; }
+            .playlist-card { box-shadow: none; border: none; width: 100%; max-width: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 操作浮层 -->
+    <div class="fixed top-6 left-1/2 -translate-x-1/2 z-50 flex gap-3 no-print">
+        <button onclick="window.print()" class="px-5 py-2 bg-white/5 hover:bg-white/10 backdrop-blur-xl border border-white/10 rounded-full text-[10px] tracking-widest uppercase transition">
+            Export PDF
+        </button>
+        <button onclick="showQR()" class="px-5 py-2 bg-sky-600/80 hover:bg-sky-500 backdrop-blur-xl border border-sky-400/20 rounded-full text-[10px] tracking-widest uppercase transition shadow-lg shadow-sky-500/20">
+            Share Link
+        </button>
+    </div>
+
+    <!-- 二维码遮罩 -->
+    <div id="qrcode-panel" onclick="this.style.display='none'">
+        <div class="bg-white p-8 rounded-[2.5rem] text-center scale-95 animate-in fade-in zoom-in duration-300" onclick="event.stopPropagation()">
+            <div id="qrcode" class="mb-4 flex justify-center"></div>
+            <p class="text-black text-xs font-bold tracking-[0.2em] uppercase">扫码同步歌单</p>
+            <p class="text-slate-400 text-[9px] mt-2 tracking-widest">DEER PLAYLIST VOL.01</p>
+        </div>
+    </div>
+
+    <!-- 歌单卡片内容 -->
+    <article class="playlist-card">
+        <header class="pt-16 pb-10 text-center border-b border-white/5">
+            <h1 class="text-4xl font-bold tracking-[0.25em] mb-3">DEER歌单</h1>
+            <p class="text-[10px] text-slate-500 tracking-[0.3em] uppercase opacity-70">Vol.01: 关于那些无法开口的告白</p>
+        </header>
+
+        <main class="p-8 md:p-10">
+            <div id="song-list"></div>
+
+            <section class="final-item">
+                <div class="flex justify-between items-end mb-2">
+                    <span class="text-sm font-bold text-sky-300">10. 沈以诚《预言家》</span>
+                    <span class="text-[8px] border border-sky-500/40 text-sky-400 px-2 py-0.5 rounded-sm font-black uppercase tracking-tighter">Resolution</span>
+                </div>
+                <p class="text-base highlight-text font-bold leading-relaxed">“我预见黑夜后的光亮，黎明即起，冲破监牢”</p>
+            </section>
+        </main>
+
+        <footer class="px-10 py-12 bg-black/20 flex justify-between items-center text-[9px] text-slate-500 tracking-[0.2em] font-medium uppercase">
+            <span>© 2026 DEER CURATION</span>
+            <span>ARCHIVED / P.01</span>
+        </footer>
+    </article>
+
+    <script>
+        const songData = [
+            { id: '01', artist: '周兴哲《挚友》', tag: 'Peak', lyric: '“我最不应该 还害你受困 进退不得”', color: 'text-sky-400' },
+            { id: '02', artist: '韦礼安《双栖动物》', tag: 'Identity', lyric: '“我不像你是双栖动物，我只能活在充满爱的幸福”', color: 'text-indigo-400' },
+            { id: '03', artist: '林俊杰《江南》', tag: 'Fate', lyric: '“相信爱一天，抵过永远”', color: 'text-emerald-400' },
+            { id: '04', artist: '周杰伦《彩虹》', tag: 'Resignation', lyric: '“你要离开 我知道很简单，你说依赖 是我们的阻碍”', color: 'text-pink-400' },
+            { id: '05', artist: '卢广仲《鱼仔》', tag: 'Motivation', lyric: '“这几年我的打拼跟认真，都是因为你”', color: 'text-amber-400' },
+            { id: '06', artist: '陈奕迅《披风》', tag: 'Aspirations', lyric: '“多平凡的人也一样，很需要梦”', color: 'text-violet-400' },
+            { id: '07', artist: '李荣浩《老街》', tag: 'Nostalgia', lyric: '“忘不掉的是什么我也不知道 放不下熟悉片段”', color: 'text-orange-400' },
+            { id: '08', artist: '王力宏《Kiss Goodbye》', tag: 'Epiphany', lyric: '“爱情的滋味此刻我终于最明白”', color: 'text-rose-400' },
+            { id: '09', artist: '胡歌《忘记时间》', tag: 'Timelessness', lyric: '“渐渐地忘记赶不上明天，只要用力地抓紧了想念”', color: 'text-cyan-400' }
+        ];
+
+        document.getElementById('song-list').innerHTML = songData.map(song => `
+            <div class="song-item">
+                <div class="flex justify-between items-end mb-1.5">
+                    <span class="text-[13px] font-bold opacity-90">${song.id}. ${song.artist}</span>
+                    <span class="text-[9px] ${song.color} font-black tracking-widest uppercase opacity-80">${song.tag}</span>
+                </div>
+                <p class="text-[13px] highlight-text font-medium leading-relaxed">${song.lyric}</p>
+            </div>
+        `).join('');
+
+        function showQR() {
+            document.getElementById('qrcode-panel').style.display = 'flex';
+            const qrContainer = document.getElementById("qrcode");
+            qrContainer.innerHTML = '';
+            new QRCode(qrContainer, {
+                text: window.location.href,
+                width: 180,
+                height: 180,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        }
+    </script>
+</body>
+</html>
